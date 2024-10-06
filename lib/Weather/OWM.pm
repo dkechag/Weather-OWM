@@ -12,13 +12,9 @@ use Time::Local;
 
 Weather::OWM - Perl client for the OpenWeatherMap (OWM) API
 
-=head1 VERSION
-
-Version 0.01
-
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.0_1';
 
 =head1 SYNOPSIS
 
@@ -97,7 +93,7 @@ There is an easy-to-use object oriented interface that can return the data in ha
 There are virtually no dependencies, except L<LWP::UserAgent> for the requests, and
 optionally L<JSON> or L<XML::Simple> if you want to decode JSON (most common) or XML data.
 
-Curent OWM API support:
+Current OWM API support:
 
 =over 4
 
@@ -326,47 +322,42 @@ They are listed below, along with any custom parameters they support. If no prod
 =over 4
 
 =item * C<current> : B<Current Weather Data> (free product). For response details see L<official API doc|https://openweathermap.org/current>.
-Optional parameter:
 
 =over 4
 
-=item * C<mode> : C<xml> and C<html> are supported as alternatives.
+=item * C<mode> : C<xml> and C<html> are supported as alternatives. (Optional)
 
 =back
 
 =item * C<forecast> : B<5 Day / 3 Hour Forecast> (free product). For response details see L<official API doc|https://openweathermap.org/forecast5>.
-Optional parameter:
 
 =over 4
 
-=item * C<cnt> : Limit the number of timestamps returned.
+=item * C<cnt> : Limit the number of timestamps returned. (Optional)
 
 =back
 
 =item * C<hourly> : B<Hourly Forecast (4 days)>. For response details see L<official API doc|https://openweathermap.org/api/hourly-forecast>.
-Optional parameter:
 
 =over 4
 
-=item * C<cnt> : Limit the number of timestamps returned.
+=item * C<cnt> : Limit the number of timestamps returned. (Optional)
 
 =back
 
 =item * C<daily> : B<Daily Forecast (16 days)>. For response details see L<official API doc|https://openweathermap.org/forecast16>.
-Optional parameter:
 
 =over 4
 
-=item * C<cnt> : Number of days (1 to 16) to be returned.
+=item * C<cnt> : Number of days (1 to 16) to be returned. (Optional)
 
 =back
 
 =item * C<climate> : B<Climatic Forecast (30 days)>. For response details see L<official API doc|https://openweathermap.org/api/forecast30>.
-Optional parameter:
 
 =over 4
 
-=item * C<cnt> : Number of days (1 to 30) to be returned.
+=item * C<cnt> : Number of days (1 to 30) to be returned. (Optional)
 
 =back
 
@@ -439,7 +430,7 @@ Parameters:
 
 =over 4
 
-=item * C<month> : (required) (required) Specify the month (1-12) for which to return statistical climate data.
+=item * C<month> : (required) Specify the month (1-12) for which to return statistical climate data.
 
 =back
 
@@ -566,7 +557,7 @@ Reverse geocoding parameters:
 =head1 ALTERNATIVE METHODS
 
 The main methods handle the HTTP response errors with a C<die> that throws the status line.
-There are alternatives methods you can use that work exactly the same, except you
+There are alternative methods you can use that work exactly the same, except you
 get the full L<HTTP::Response> object from the API endpoint, so that you can do
 the error handling yourself.
 
@@ -666,7 +657,7 @@ sub geo {
 
 sub one_call_response {
     my $self = shift;
-    my %args = @_;
+    my %args = $self->_preprocess_params('one_call', @_);
 
     $args{product} = '' if !$args{product} || $args{product} eq 'forecast';
 
@@ -707,7 +698,7 @@ sub one_call_response {
 
 sub get_weather_response {
     my $self = shift;
-    my %args = @_;
+    my %args = $self->_preprocess_params('weather', @_);
 
     _verify_lat_lon(\%args)
         unless $args{q} || $args{zip} || $args{city_id};
@@ -717,7 +708,7 @@ sub get_weather_response {
 
 sub get_history_response {
     my $self = shift;
-    my %args = @_;
+    my %args = $self->_preprocess_params('history', @_);
 
     $args{product} ||= 'hourly';
 
@@ -751,7 +742,7 @@ sub get_history_response {
 
 sub geo_response {
     my $self = shift;
-    my %args = @_;
+    my %args = $self->_preprocess_params('geo', @_);
 
     if (defined $args{lat} && defined $args{lon}) {
         _verify_lat_lon(\%args);
@@ -803,7 +794,7 @@ sub _get {
     my $self      = shift;
     my $wantarray = shift;
     my $api       = shift;
-    my %args      = $self->_preprocess_params($api, @_);
+    my %args      = @_;
     my $error     = delete $args{error} || $self->{error};
 
     my $resp =
@@ -814,8 +805,7 @@ sub _get {
 
     if ($resp->is_success) {
         return _output($resp->decoded_content, $wantarray ? ($args{mode} || 'json') : '');
-    }
-    else {
+    } else {
         if ($error eq 'die') {
             die $resp->status_line;
         } else {
@@ -974,9 +964,9 @@ the old Dark Sky weather API). It offers 500k calls/day for free, but requires a
 paid Apple developer account. You can use L<Weather::WeatherKit>, which is very
 similar to this module (same author).
 
-=head2 7Timer
+=head2 7Timer!
 
-If you are interested in astronomy/stargazing the 7Timer weather forecast might be
+If you are interested in astronomy/stargazing the 7Timer! weather forecast might be
 useful. It uses the standard NOAA forecast, but calculates astronomical seeing and
 transparency. It is completely free and can be accessed with L<Weather::Astro7Timer>,
 which is another very similar to this module (same author).
@@ -993,10 +983,7 @@ Dimitrios Kechagias, C<< <dkechag at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests either on L<GitHub|https://github.com/dkechag/Weather-OWM> (preferred), or on RT (via the email
-C<bug-weather-owm at rt.cpan.org> or L<web interface|https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Weather-OWM>).
-
-I will be notified, and then you'll automatically be notified of progress on your bug as I make changes.
+Please report any bugs or feature requests on L<GitHub|https://github.com/dkechag/Weather-OWM>.
 
 =head1 GIT
 

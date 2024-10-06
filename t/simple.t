@@ -54,6 +54,13 @@ subtest 'get_weather' => sub {
 
 };
 
+subtest 'get_weather_response' => sub {
+    $request = \"https://api.openweathermap.org/data/2.5/forecast?units=metric&lon=-1.83&lat=51.18&appid=APIKEY";
+    $content = \'{"main":{"temp":29.48}}';
+    my $re = $owm->get_weather_response(lat => 51.18, lon => -1.83, product => 'forecast');
+    is($re->decoded_content, $$content, 'Content as expected');
+};
+
 subtest 'one_call' => sub {
     $request = \'https://api.openweathermap.org/data/3.0/onecall?appid=APIKEY&lon=16.8&lat=15.6&units=imperial';
     $content = \'{"current":{"temp":38.1}}';
@@ -149,6 +156,10 @@ subtest 'error' => sub {
     my $re = $owm->get_weather(zip => 10001, product => 'hourly');
     is($re, 'ERROR: 401 Unauthorized', 'Error response as expected');
 
+};
+
+subtest 'ts_to_date' => sub {
+    is(Weather::OWM::ts_to_date(1000000, 1), '1970-01-12 13:46:40Z', 'Date OK');
 };
 
 done_testing;
