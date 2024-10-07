@@ -47,7 +47,7 @@ Weather::OWM - Perl client for the OpenWeatherMap (OWM) API
       cnt     => '72'
   );
 
-  ...and print the temperatures next to the date/time
+  # ...and print the temperatures next to the date/time
   say scalar(localtime($_->{dt}))." $_->{main}->{temp}C" for @{$re{list}};
 
   ### Using the Geocoder API:
@@ -137,7 +137,7 @@ Optional parameters:
 
 =item * C<agent> : Customize the user agent string.
 
-=item * C<ua> : Pass your own L<LWP::UserAgent> to customise further.
+=item * C<ua> : Pass your own L<LWP::UserAgent> to customise further. Will override C<agent>.
 
 =item * C<lang> : Set language (two letter language code) for requests. You can override per API call. Default: C<en>.
 
@@ -578,6 +578,23 @@ Alternative to C<get_history> (same parameters).
     );
 
 Alternative to C<geo> (same parameters).
+
+=head1 HELPER METHODS
+
+=head2 C<icon_url>
+
+    my $url = $owm->icon_url($icon, $small?);
+
+The APIs may return an C<icon> key which corresponds to a specific icon. The URL
+to the 100x100 icon (png with transparent background) is provided by this function,
+unless you pass C<$small> in which case you get the URL to the 50x50 icon.
+
+=head2 C<icon_data>
+
+    my $data = $owm->icon_data($icon, $small?);
+
+Similar to L<icon_url> above, but downloads the png data (undef on error).
+
 
 =head1 HELPER FUNCTIONS
 

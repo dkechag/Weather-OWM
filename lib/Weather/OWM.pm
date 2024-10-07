@@ -14,7 +14,7 @@ Weather::OWM - Perl client for the OpenWeatherMap (OWM) API
 
 =cut
 
-our $VERSION = '0.0_1';
+our $VERSION = '0.1';
 
 =head1 SYNOPSIS
 
@@ -61,7 +61,7 @@ our $VERSION = '0.0_1';
       cnt     => '72'
   );
 
-  ...and print the temperatures next to the date/time
+  # ...and print the temperatures next to the date/time
   say scalar(localtime($_->{dt}))." $_->{main}->{temp}C" for @{$re{list}};
 
   ### Using the Geocoder API:
@@ -151,7 +151,7 @@ Optional parameters:
 
 =item * C<agent> : Customize the user agent string.
 
-=item * C<ua> : Pass your own L<LWP::UserAgent> to customise further.
+=item * C<ua> : Pass your own L<LWP::UserAgent> to customise further. Will override C<agent>.
 
 =item * C<lang> : Set language (two letter language code) for requests. You can override per API call. Default: C<en>.
 
@@ -593,6 +593,23 @@ Alternative to C<get_history> (same parameters).
 
 Alternative to C<geo> (same parameters).
 
+=head1 HELPER METHODS
+
+=head2 C<icon_url>
+
+    my $url = $owm->icon_url($icon, $small?);
+
+The APIs may return an C<icon> key which corresponds to a specific icon. The URL
+to the 100x100 icon (png with transparent background) is provided by this function,
+unless you pass C<$small> in which case you get the URL to the 50x50 icon.
+
+=head2 C<icon_data>
+
+    my $data = $owm->icon_data($icon, $small?);
+
+Similar to L<icon_url> above, but downloads the png data (undef on error).
+
+
 =head1 HELPER FUNCTIONS
 
 =head2 C<ts_to_date>
@@ -626,6 +643,7 @@ sub new {
         units   => 'metric',
         error   => 'return',
     );
+    $args{agent} = $args{ua}->agent() if $args{ua};
     $self->{$_} = $args{$_} || $defaults{$_} for keys %defaults;
     $self->{$_} = $args{$_} for qw/key ua debug/;
 
@@ -752,6 +770,29 @@ sub geo_response {
     }
 
     return $self->_get_ua($self->_geo_url(%args));
+}
+
+sub icon_url {
+    my $self = shift;
+    my $icon = shift;
+    my $sm   = shift;
+
+    return unless $icon;
+
+    $icon .= '@2x' unless $sm;
+    return $self->{scheme} . "://openweathermap.org/img/wn/$icon.png";
+}
+
+sub icon_data {
+    my $self = shift;
+    my $url  = $self->icon_url(@_);
+
+    if ($url) {
+        my $res = $self->_get_ua($url);
+        return $res->content if $res->is_success;
+    }
+
+    return;
 }
 
 sub ts_to_date {

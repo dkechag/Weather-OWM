@@ -20,6 +20,25 @@ my $mock = Test2::Mock->new(
     ],
 );
 
+subtest 'constructor' => sub {
+    my %defaults = (
+        scheme  => 'https',
+        timeout => 30,
+        agent   => "libwww-perl Weather::OWM/".$Weather::OWM::VERSION,
+        lang    => "en",
+        units   => 'metric',
+        error   => 'return',
+    );
+
+    is($owm->{$_}, $defaults{$_}, 'Default $_') for keys %defaults;
+
+    my $ua = LWP::UserAgent->new();
+    $ua->agent('custom');   
+
+    my $custom_ua = Weather::OWM->new(key => 'APIKEY', ua => $ua);
+    is($custom_ua->{agent}, 'custom', 'Override agent');
+};
+
 subtest 'get_weather' => sub {
     $content = \'<current>
     <temperature value="298.48" unit="kelvin"/>
@@ -75,6 +94,13 @@ subtest 'one_call' => sub {
 
 };
 
+subtest 'one_call_response' => sub {
+    $request = \'https://api.openweathermap.org/data/3.0/onecall?appid=APIKEY&lon=16.8&lat=15.6&units=imperial';
+    $content = \'{"current":{"temp":38.1}}';
+    my $re = $owm->one_call_response(lat => 15.6, lon => 16.8, units => 'imperial');
+    is($re->decoded_content, $$content, 'Content as expected');
+};
+
 subtest 'get_history' => sub {
     $request = \'https://history.openweathermap.org/data/2.5/history/city?cnt=72&q=Greenwich,UK&appid=APIKEY&start=1672531200&type=hour';
     $content = \'{"list":[{"main":{"temp":38.1}}]}';
@@ -120,6 +146,17 @@ subtest 'get_history' => sub {
     is($re, $$content, 'Content as expected');
 };
 
+subtest 'get_history_response' => sub {
+    $request = \'https://history.openweathermap.org/data/2.5/history/city?cnt=72&q=Greenwich,UK&appid=APIKEY&start=1672531200&type=hour';
+    $content = \'{"list":[{"main":{"temp":38.1}}]}';
+    my $re = $owm->get_history_response(
+        loc     => 'Greenwich,UK',
+        start   => '2023-01-01 00:00:00Z',
+        cnt     => '72'
+    );
+    is($re->decoded_content, $$content, 'Content as expected');
+};
+
 subtest 'geo' => sub {
     $request = \'https://api.openweathermap.org/geo/1.0/direct?appid=APIKEY&q=Portland,ME,US';
     $content = \'[{"lon":"-70.25","lat":"43.66"}]';
@@ -130,6 +167,19 @@ subtest 'geo' => sub {
     $content = \'[{"name":"Portland","state":"Maine","country":"US"}]';
     @locations = $owm->geo(lat => 43.65, lon => -70.3);
     is(\@locations, [{name=>"Portland",state=>"Maine",country=>"US"}], 'Content as expected');
+};
+
+subtest 'icon_url' => sub {
+    is($owm->icon_url(), undef, 'Undef');
+    is($owm->icon_url('10n'), 'https://openweathermap.org/img/wn/10n@2x.png', "Regular png");
+    is($owm->icon_url('10n', 1), 'https://openweathermap.org/img/wn/10n.png', "Small png");
+};
+
+subtest 'icon_data' => sub {
+    is($owm->icon_data(), undef, 'Undef');
+    $request = \'"https://openweathermap.org/img/wn/$icon10d@2x.png';
+    $content = \'data';
+    is($owm->icon_data('10d'), $$content, "Donloaded png");
 };
 
 subtest 'error' => sub {
