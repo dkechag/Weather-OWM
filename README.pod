@@ -626,7 +626,7 @@ for my purposes, but it was more complex (returns objects, so a new object defin
 is required per API endpoint added etc) and with more dependencies (including L<Moo>),
 than what I wanted from such a module.
 
-=head2 Apple WebKit
+=head2 Apple WeatherKit
 
 An alternative source for multi-source forecasts is Apple's WeatherKit (based on
 the old Dark Sky weather API). It offers 500k calls/day for free, but requires a
