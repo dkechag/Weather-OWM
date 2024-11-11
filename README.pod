@@ -5,7 +5,6 @@ Weather::OWM - Perl client for the OpenWeatherMap (OWM) API
 =head1 SYNOPSIS
 
   use Weather::OWM;
-  use strict;
   use v5.10;
 
   my $owm = Weather::OWM->new(key => 'Your API key');
@@ -94,7 +93,7 @@ Current OWM API support:
 =back
 
 Please see L<the official OWM website|https://openweathermap.org/api> for extensive
-documentation. Note that even the free APIs require L<signing up|https://home.openweathermap.org/users/sign_up>
+documentation. Note that even the free APIs require L<registering|https://home.openweathermap.org/users/sign_up>
 for an API key.
 
 This module belongs to a family of weather modules (along with L<Weather::Astro7Timer>
@@ -595,17 +594,19 @@ unless you pass C<$small> in which case you get the URL to the 50x50 icon.
 
 Similar to L<icon_url> above, but downloads the png data (undef on error).
 
+=head1 HELPER FUNCTIONS FROM Weather::API::Base
 
-=head1 HELPER FUNCTIONS
+The parent class L<Weather::API::Base> contains some useful functions:
 
-=head2 C<ts_to_date>
+  use Weather::API::Base qw(:all);
 
-    my $datetime = Weather::OWM::ts_to_date($timestamp, $utc?);
+  # Get time in YYYY-MM-DD HH:mm:ss format, local time zone from a unix timestamp
+  my $datetime = ts_to_date(time());
 
-The OWM APIs usually return unix timestamps (key C<dt>). There are many ways to
-convert them to human readable dates, but for convenience you can use C<ts_to_date>,
-which will return the format C<YYYY-MM-DD HH:mm:ss> in your local time zone, or
-C<YYYY-MM-DD HH:mm:ssZ> in UTC if the second argument is true.
+  # Convert 30 degrees Celsius to Fahrenheit
+  my $result = convert_units('C', 'F', 30);
+
+See the doc for that module for more details.
 
 =head1 PERL WEATHER MODULES
 
@@ -624,7 +625,7 @@ Note that there is an older L<Weather::OpenWeatherMap> module, but it is no long
 maintained and only supports the old (v2.5) Weather API. I looked into updating it
 for my purposes, but it was more complex (returns objects, so a new object definition
 is required per API endpoint added etc) and with more dependencies (including L<Moo>),
-than what I wanted from such a module.
+than what I wanted for such a module.
 
 =head2 Apple WeatherKit
 
